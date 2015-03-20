@@ -6,7 +6,7 @@ env:
 
 language: c
 compiler:
-    - clang
+#    - clang
     - gcc
 script:
     - ./autogen.sh
@@ -19,6 +19,6 @@ addons:
       name: "mhaas/wifidog-gateway"
       description: "Build submitted via Travis CI"
     notification_email: haas@computerlinguist.org
-    build_command_prepend: "make distclean && ./autogen.sh"
+    build_command_prepend: "./autogen.sh"
     build_command:   "make"
     branch_pattern: test-travis
