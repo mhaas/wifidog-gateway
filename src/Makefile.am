@@ -9,7 +9,7 @@ AM_CPPFLAGS = \
 	-I${top_srcdir}/libhttpd/ \
 	-DSYSCONFDIR='"$(sysconfdir)"' \
 	-Wall \
-	-Wextra \
+	-Wextra -Werror \
 	-Wno-unused-parameter
 wifidog_LDADD = $(top_builddir)/libhttpd/libhttpd.la
 
