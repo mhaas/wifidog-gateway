@@ -21,4 +21,4 @@ addons:
     notification_email: haas@computerlinguist.org
     build_command_prepend: "make distclean && ./autogen.sh"
     build_command:   "make"
-    branch_pattern: travis_test
+    branch_pattern: test-travis
