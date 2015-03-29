@@ -69,6 +69,9 @@ void client_list_init(void);
 /** @brief Insert client at head of list */
 void client_list_insert_client(t_client *client);
 
+/** @brief Returns linked list as array */
+int client_list_as_array(t_client ***client);
+
 /** @brief Adds a new client to the connections list */
 t_client *client_list_append(const char *ip, const char *mac, const char *token);
 
@@ -85,6 +88,9 @@ t_client *client_list_find_by_mac(const char *mac); /* needed by wdctl_thread.c 
 /** @brief Finds a client by its token */
 t_client *client_list_find_by_token(const char *token);
 
+/** @brief Checks whether a client is still valid */
+int client_still_valid(const t_client *client);
+
 /** @brief Deletes a client from the connections list and frees its memory*/
 void client_list_delete(t_client *client);
 
@@ -96,7 +102,12 @@ void client_free_node(t_client *client);
 
 #define LOCK_CLIENT_LIST() do { \
 	debug(LOG_DEBUG, "Locking client list"); \
-	pthread_mutex_lock(&client_list_mutex); \
+    int ret; \
+	ret = pthread_mutex_lock(&client_list_mutex); \
+    if (ret != 0) { \
+        debug(LOG_ERR, "Error locking client list mutex!"); \
+        exit(1); \
+    }  \
 	debug(LOG_DEBUG, "Client list locked"); \
 } while (0)
 

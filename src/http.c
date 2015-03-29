@@ -271,6 +271,7 @@ http_callback_auth(httpd * webserver, request * r)
                 debug(LOG_DEBUG, "New client for %s", r->clientAddr);
                 client_list_append(r->clientAddr, mac, token->value);
             } else if (logout) {
+                // TODO: use firewall.c::logout_client
                 t_authresponse authresponse;
                 s_config *config = config_get_config();
                 unsigned long long incoming = client->counters.incoming;

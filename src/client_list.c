@@ -48,7 +48,7 @@
 static t_client         *firstclient = NULL;
 
 /** Global mutex to protect access to the client list */
-pthread_mutex_t client_list_mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t client_list_mutex = PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP;
 
 /** Get a new client struct, not added to the list yet
  * @return Pointer to newly created client object not on the list yet.
@@ -91,6 +91,29 @@ client_list_insert_client(t_client *client)
     firstclient = client;
 }
 
+/**
+ * Gets linked list as array.
+ *
+ * Lock should be help when calling this!
+ *
+ * @param Pointer to array of pointers to t_client object, will be overwritten
+ * @returns Number of clients in array
+ */
+int
+client_list_as_array(t_client ***client) {
+    t_client * ptr;
+    ptr = firstclient;
+    int count = 0;
+    while (NULL != ptr) {
+        count++;
+        // If we get another client, grow the array by one.
+        // Safe_realloc returns a pointer to an array of t_client pointers
+        (*client) = safe_realloc((*client), count * sizeof(t_client*));
+        (*client)[count - 1] = ptr; 
+        ptr = ptr->next;
+    }
+    return count;
+}
 
 /** Based on the parameters it receives, this function creates a new entry
  * in the connections list. All the memory allocation is done here.
@@ -194,6 +217,40 @@ client_list_find_by_mac(const char *mac)
 
     return NULL;
 }
+
+
+/**
+ * Checks if client is still valid.
+ *
+ * Lock should be help when calling this!
+ *
+ * This is useful if we have a pointer to a client
+ * and want to check if someone else deleted it
+ * when we did not have a lock.
+ *
+ * Note that this does not consider if the client still
+ * has the same IP, MAC or token. The function only checks
+ * if a the pointer references a valid client object, not if
+ * it refers to the same entity as before.
+ *
+ * @param t_client Client we are looking for for in the linked list
+ * @return True or False
+ */
+int
+client_still_valid(const t_client * client)
+{
+    t_client         *ptr;
+
+    ptr = firstclient;
+    while (NULL != ptr) {
+        if (ptr == client)
+            return 1;
+        ptr = ptr->next;
+    }
+
+    return 0;
+}
+
 
 /** Finds a client by its token
  * @param token Token we are looking for in the linked list
