@@ -55,7 +55,6 @@ static s_config config;
 /**
  * Mutex for the configuration file, used by the auth_servers related
  * functions. */
-extern pthread_mutex_t config_mutex;
 pthread_mutex_t config_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 /** @internal
@@ -102,6 +101,8 @@ typedef enum {
     oSSLPeerVerification,
     oSSLCertPath,
     oSSLAllowedCipherList,
+    oUser,
+    oGroup,
 } OpCodes;
 
 /** @internal
@@ -146,6 +147,8 @@ static const struct {
     "sslpeerverification", oSSLPeerVerification}, {
     "sslcertpath", oSSLCertPath}, {
     "sslallowedcipherlist", oSSLAllowedCipherList}, {
+    "user", oUser}, {
+    "group", oGroup}, {
 NULL, oBadOption},};
 
 static void config_notnull(const void *parm, const char *parmname);
@@ -170,7 +173,7 @@ void
 config_init(void)
 {
     debug(LOG_DEBUG, "Setting default config parameters");
-    strncpy(config.configfile, DEFAULT_CONFIGFILE, sizeof(config.configfile));
+    config.configfile = safe_strdup(DEFAULT_CONFIGFILE);
     config.htmlmsgfile = safe_strdup(DEFAULT_HTMLMSGFILE);
     config.debuglevel = DEFAULT_DEBUGLEVEL;
     config.httpdmaxconn = DEFAULT_HTTPDMAXCONN;
@@ -197,6 +200,9 @@ config_init(void)
     config.ssl_certs = safe_strdup(DEFAULT_AUTHSERVSSLCERTPATH);
     config.ssl_verify = DEFAULT_AUTHSERVSSLPEERVER;
     config.ssl_cipher_list = NULL;
+    config.arp_table_path = safe_strdup(DEFAULT_ARPTABLE);
+    config.user = safe_strdup(DEFAULT_USER);
+    config.group = safe_strdup(DEFAULT_GROUP);
 }
 
 /**
@@ -764,6 +770,22 @@ config_read(const char *filename)
                     debug(LOG_WARNING, "SSLAllowedCipherList is set but no SSL compiled in. Ignoring!");
 #endif
                     break;
+                case oUser:
+#ifndef USE_LIBCAP
+                    debug(LOG_WARNING, "Non-privileged user is set but not compiled with libcap. Bailing out!");
+                    exit(1);
+#endif
+                    free(config.user);
+                    config.user = safe_strdup(p1);
+                    break;
+                case oGroup:
+#ifndef USE_LIBCAP
+                    debug(LOG_WARNING, "Non-privileged group is set but not compiled with libcap. Bailing out!");
+                    exit(1);
+#endif
+                    free(config.group);
+                    config.group = safe_strdup(p1);
+                    break;
                 case oBadOption:
                     /* FALL THROUGH */
                 default:
@@ -874,7 +896,9 @@ parse_trusted_mac_list(const char *ptr)
                         p->mac = safe_strdup(mac);
                         p->next = NULL;
                     } else {
-                        debug(LOG_ERR, "MAC address [%s] already on trusted list. See option TrustedMACList in wifidog.conf file ", mac);
+                        debug(LOG_ERR,
+                              "MAC address [%s] already on trusted list. See option TrustedMACList in wifidog.conf file ",
+                              mac);
                     }
                 }
             }

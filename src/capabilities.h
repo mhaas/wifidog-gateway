@@ -1,4 +1,4 @@
-/* vim: set et ts=4 sts=4 sw=4 : */
+/* vim: set et sw=4 ts=4 sts=4 : */
 /********************************************************************\
  * This program is free software; you can redistribute it and/or    *
  * modify it under the terms of the GNU General Public License as   *
@@ -19,38 +19,32 @@
  *                                                                  *
 \********************************************************************/
 
-/* $Id$ */
-/** @file safe.h
-	  @brief Safe versions of stdlib/string functions that error out and exit if memory allocation fails
-	  @author Copyright (C) 2005 Mina Naguib <mina@ilesansfil.org>
+/** @file capabilities.h
+    @author Copyright (C) 2015 Michael Haas <haas@computerlinguist.org>
 */
 
-#ifndef _SAFE_H_
-#define _SAFE_H_
+#include "../config.h"
 
-#include <stdarg.h>             /* For va_list */
-#include <sys/types.h>          /* For fork */
-#include <unistd.h>             /* For fork */
+#ifdef USE_LIBCAP
 
-/** Register an fd for auto-cleanup on fork() */
-void register_fd_cleanup_on_fork(const int);
+#ifndef _CAPABILITIES_H_
+#define _CAPABILITIES_H_
 
-/** @brief Safe version of malloc */
-void *safe_malloc(size_t);
+void
+drop_privileges(const char*, const char*);
 
-/** @brief Safe version of realloc */
-void *safe_realloc(void *, size_t);
+void
+switch_to_root();
 
-/* @brief Safe version of strdup */
-char *safe_strdup(const char *);
+FILE*
+popen_as_root(const char*, const char*);
 
-/* @brief Safe version of asprintf */
-int safe_asprintf(char **, const char *, ...);
+void
+set_user_group(const char*, const char*);
 
-/* @brief Safe version of vasprintf */
-int safe_vasprintf(char **, const char *, va_list);
+void
+set_uid_gid(uid_t, gid_t);
 
-/* @brief Safe version of fork */
-pid_t safe_fork(void);
+#endif                          /* _CAPABILITIES_H_ */
 
-#endif                          /* _SAFE_H_ */
+#endif /* USE_LIBCAP */
